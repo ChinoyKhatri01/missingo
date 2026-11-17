@@ -3,33 +3,36 @@ import numpy as np
 class Signal:
     def __init__(self, data, fs):
 
-        arr = np.array(data)
+        if not isinstance(data, (list, np.ndarray)):
+            raise ValueError("data must be a list or a numpy array")
 
-        if arr.size == 0 :
+        arr = np.asarray(data)
+
+        if arr.size == 0:
             raise ValueError("data must not be empty")
-        if arr.ndim != 1 :
+        if arr.ndim != 1:
             raise ValueError("data must be a 1D array")
         for value in data:
                     if isinstance(value, (bool, np.bool_)):
                         raise ValueError("data must be numeric (float or int or complex)")
-        if np.issubdtype(arr.dtype, np.bool_) :
+        if np.issubdtype(arr.dtype, np.bool_):
             raise ValueError("data must be numeric (float or int or complex)")
-        if not np.issubdtype(arr.dtype, np.number) :
+        if not np.issubdtype(arr.dtype, np.number):
             raise ValueError("data must be numeric (float or int or complex)")
-        if not np.all(np.isfinite(arr)) :
+        if not np.all(np.isfinite(arr)):
             raise ValueError("data contains non-finite values (NaN or Inf)")
 
         if isinstance(fs, (bool, np.bool_)):
             raise ValueError("fs must be a number")
-        if not isinstance(fs, (int, float, np.integer, np.floating)) :
+        if not isinstance(fs, (int, float, np.integer, np.floating)):
             raise ValueError("fs must be a number")
-        if fs <= 0 :
+        if fs<=0:
             raise ValueError("fs must be greater than 0")
-        if not np.isfinite(fs) :
+        if not np.isfinite(fs):
             raise ValueError("fs must be finite")
         
         self._data = arr.copy()
-        self._fs = fs 
+        self._fs = float(fs) 
 
         self._data.flags.writeable = False
 
@@ -47,15 +50,15 @@ class Signal:
 
     @property
     def sampling_interval(self):
-        return 1.0 / self._fs
+        return 1.0/self._fs
 
     @property
     def duration(self):
-        return self._data.size /self._fs
+        return self._data.size/self._fs
 
     @property
     def time(self):
-        time = np.arange(self._data.size) / self._fs
+        time = np.arange(self._data.size)/self._fs
         time.flags.writeable = False
         return time
 
@@ -69,6 +72,4 @@ class Signal:
           dtype = {self._data.dtype},
           ndim = {self._data.ndim})"""
         return sig
-
-
 
