@@ -1,1 +1,1 @@
-from .periodic import sine, cosine
+from .periodic import sine, cosine, square

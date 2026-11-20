@@ -662,3 +662,236 @@ def test_cosine_negative_offset_is_allowed():
     result = generator.cosine(0, 100, 5, offset=-3)
 
     np.testing.assert_allclose(result.data, np.full(5, -2.0))
+
+
+
+
+
+
+import numpy as np
+import pytest
+
+from missingo.generator import square
+
+
+# --------------------------------------------------
+# Basic waveform tests
+# --------------------------------------------------
+
+def test_square_default():
+    signal = square(
+        frequency=1,
+        fs=8,
+        n_samples=8
+    )
+
+    expected = np.array([
+        1, 1, 1, 1,
+        -1, -1, -1, -1
+    ])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+def test_square_duty_25_percent():
+    signal = square(
+        frequency=1,
+        fs=8,
+        n_samples=8,
+        duty=0.25
+    )
+
+    expected = np.array([
+        1, 1,
+        -1, -1, -1, -1, -1, -1
+    ])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+def test_square_duty_75_percent():
+    signal = generator.square(
+        frequency=1,
+        fs=8,
+        n_samples=8,
+        duty=0.75
+    )
+
+    expected = np.array([
+        1, 1, 1, 1, 1, 1,
+        -1, -1
+    ])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+# --------------------------------------------------
+# Amplitude and offset tests
+# --------------------------------------------------
+
+def test_square_custom_amplitude():
+    signal = generator.square(
+        frequency=1,
+        fs=8,
+        n_samples=8,
+        amplitude=2
+    )
+
+    expected = np.array([
+        2, 2, 2, 2,
+        -2, -2, -2, -2
+    ])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+def test_square_custom_offset():
+    signal = generator.square(
+        frequency=1,
+        fs=8,
+        n_samples=8,
+        offset=3
+    )
+
+    expected = np.array([
+        4, 4, 4, 4,
+        2, 2, 2, 2
+    ])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+def test_square_custom_amplitude_and_offset():
+    signal = generator.square(
+        frequency=1,
+        fs=8,
+        n_samples=8,
+        amplitude=2,
+        offset=3
+    )
+
+    expected = np.array([
+        5, 5, 5, 5,
+        1, 1, 1, 1
+    ])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+# --------------------------------------------------
+# Phase tests
+# --------------------------------------------------
+
+def test_square_phase():
+    signal = generator.square(
+        frequency=1,
+        fs=8,
+        n_samples=8,
+        phase=np.pi / 2
+    )
+
+    expected = np.array([
+        1, 1,
+        -1, -1, -1, -1,
+        1, 1
+    ])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+def test_square_negative_phase():
+    signal = generator.square(
+        frequency=1,
+        fs=8,
+        n_samples=8,
+        phase=-np.pi / 2
+    )
+
+    expected = np.array([
+    -1, -1,
+     1,  1,  1,  1,
+    -1, -1
+])
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+# --------------------------------------------------
+# Frequency tests
+# --------------------------------------------------
+
+def test_square_zero_frequency():
+    signal = generator.square(
+        frequency=0,
+        fs=8,
+        n_samples=8
+    )
+
+    expected = np.ones(8)
+
+    np.testing.assert_array_equal(signal.data, expected)
+
+
+# --------------------------------------------------
+# Duty cycle validation tests
+# --------------------------------------------------
+
+@pytest.mark.parametrize("duty", [
+    0,
+    1,
+    -0.1,
+    1.1,
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_square_invalid_duty_values(duty):
+    with pytest.raises(ValueError):
+        generator.square(
+            frequency=1,
+            fs=8,
+            n_samples=8,
+            duty=duty
+        )
+
+
+@pytest.mark.parametrize("duty", [
+    True,
+    False,
+    "0.5",
+    None,
+    [0.5]
+])
+def test_square_invalid_duty_types(duty):
+    with pytest.raises(TypeError):
+        generator.square(
+            frequency=1,
+            fs=8,
+            n_samples=8,
+            duty=duty
+        )
+
+
+# --------------------------------------------------
+# Output tests
+# --------------------------------------------------
+
+def test_square_output_length():
+    signal = generator.square(
+        frequency=1,
+        fs=100,
+        n_samples=500
+    )
+
+    assert len(signal.data) == 500
+
+
+def test_square_output_is_finite():
+    signal = generator.square(
+        frequency=1,
+        fs=100,
+        n_samples=500
+    )
+
+    assert np.all(np.isfinite(signal.data))
+

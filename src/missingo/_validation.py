@@ -96,3 +96,19 @@ def validate_inputs(frequency, fs, n_samples, amplitude, phase, offset):
     validate_offset(offset)
 
     return n_samples
+
+def validate_duty(duty):
+    if isinstance(duty, (bool, np.bool_)):
+        raise TypeError("duty must be a number")
+
+    if not isinstance(duty, (int, float, np.integer, np.floating)):
+        raise TypeError("duty must be a number")
+
+    if not np.isfinite(duty):
+        raise ValueError("duty must be finite")
+    
+    if duty <=0 or duty >= 1:
+        raise ValueError("duty must be between 0 and 1")
+    
+    
+    
