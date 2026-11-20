@@ -1,0 +1,32 @@
+from ..signal import Signal
+from .._validation import validate_inputs_aperiodic, validate_delay
+import numpy as np
+
+#impulse signal function
+def impulse(fs, n_samples, delay=0, amplitude=1.0, offset=0.0):
+
+    #validation for all inputs
+    n_samples = validate_inputs_aperiodic(fs, n_samples, amplitude, offset)
+    delay = validate_delay(delay, n_samples)
+
+    #mathematical expression for impulse signal
+    x = np.full(n_samples, offset, dtype=float)
+    x[delay] += amplitude
+
+    # create a Signal object with the generated impulse signal data and the specified sampling frequency
+    signal = Signal(x, fs)
+    return signal
+
+#step signal function
+def step(fs, n_samples, delay=0, amplitude=1.0, offset=0.0):
+
+    #validation for all inputs
+    n_samples = validate_inputs_aperiodic(fs, n_samples, amplitude, offset)
+    delay = validate_delay(delay, n_samples)
+
+    #mathematical expression for step signal
+    x = np.full(n_samples, offset, dtype=float  )
+    x[delay:] += amplitude
+    # create a Signal object with the generated step signal data and the specified sampling frequency
+    signal = Signal(x, fs)
+    return signal

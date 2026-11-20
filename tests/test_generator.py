@@ -895,3 +895,748 @@ def test_square_output_is_finite():
 
     assert np.all(np.isfinite(signal.data))
 
+
+# ==================================================
+# DAY 7: SAWTOOTH, TRIANGLE, IMPULSE AND STEP TESTS
+# ==================================================
+
+
+# --------------------------------------------------
+# SAWTOOTH GENERATOR TESTS
+# --------------------------------------------------
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+def test_day7_periodic_returns_signal(waveform):
+    result = waveform(1, 8, 8)
+    assert isinstance(result, Signal)
+
+
+def test_sawtooth_default_values():
+    result = generator.sawtooth(1, 8, 8)
+
+    expected = np.array([
+        -1, -0.75, -0.5, -0.25,
+         0,  0.25,  0.5,  0.75
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_sawtooth_custom_amplitude():
+    result = generator.sawtooth(1, 8, 8, amplitude=2)
+
+    expected = np.array([
+        -2, -1.5, -1, -0.5,
+         0,  0.5,  1,  1.5
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_sawtooth_negative_amplitude():
+    result = generator.sawtooth(1, 8, 8, amplitude=-2)
+
+    expected = np.array([
+         2, 1.5, 1, 0.5,
+         0, -0.5, -1, -1.5
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_sawtooth_custom_offset():
+    result = generator.sawtooth(1, 8, 8, offset=3)
+
+    expected = np.array([
+        2, 2.25, 2.5, 2.75,
+        3, 3.25, 3.5, 3.75
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_sawtooth_custom_amplitude_offset():
+    result = generator.sawtooth(
+        1, 8, 8,
+        amplitude=2,
+        offset=3
+    )
+
+    expected = np.array([
+        1, 1.5, 2, 2.5,
+        3, 3.5, 4, 4.5
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_sawtooth_phase():
+    result = generator.sawtooth(
+        1, 8, 8,
+        phase=np.pi / 2
+    )
+
+    n = np.arange(8)
+    p = (n / 8 + 0.25) % 1
+    expected = 2 * p - 1
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_sawtooth_zero_frequency():
+    result = generator.sawtooth(
+        0, 100, 8,
+        amplitude=2,
+        offset=3
+    )
+
+    np.testing.assert_allclose(result.data, np.full(8, 1.0))
+
+
+# --------------------------------------------------
+# TRIANGLE GENERATOR TESTS
+# --------------------------------------------------
+
+def test_triangle_default_values():
+    result = generator.triangle(1, 8, 8)
+
+    expected = np.array([
+        -1, -0.5, 0, 0.5,
+         1,  0.5, 0, -0.5
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_triangle_custom_amplitude():
+    result = generator.triangle(1, 8, 8, amplitude=2)
+
+    expected = np.array([
+        -2, -1, 0, 1,
+         2,  1, 0, -1
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_triangle_negative_amplitude():
+    result = generator.triangle(1, 8, 8, amplitude=-2)
+
+    expected = np.array([
+         2, 1, 0, -1,
+        -2, -1, 0, 1
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_triangle_custom_offset():
+    result = generator.triangle(1, 8, 8, offset=3)
+
+    expected = np.array([
+        2, 2.5, 3, 3.5,
+        4, 3.5, 3, 2.5
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_triangle_custom_amplitude_offset():
+    result = generator.triangle(
+        1, 8, 8,
+        amplitude=2,
+        offset=3
+    )
+
+    expected = np.array([
+        1, 2, 3, 4,
+        5, 4, 3, 2
+    ])
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_triangle_phase():
+    result = generator.triangle(
+        1, 8, 8,
+        phase=np.pi / 2
+    )
+
+    n = np.arange(8)
+    p = (n / 8 + 0.25) % 1
+    expected = 1 - 2 * np.abs(2 * p - 1)
+
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_triangle_zero_frequency():
+    result = generator.triangle(
+        0, 100, 8,
+        amplitude=2,
+        offset=3
+    )
+
+    np.testing.assert_allclose(result.data, np.full(8, 1.0))
+
+
+# --------------------------------------------------
+# PERIODIC GENERATOR VALIDATION
+# Applies to sawtooth and triangle
+# --------------------------------------------------
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("frequency", [
+    True, False, np.bool_(True),
+    "5", 1 + 2j, None
+])
+def test_day7_periodic_invalid_frequency_type(waveform, frequency):
+    with pytest.raises(TypeError):
+        waveform(frequency, 100, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("frequency", [-1, -0.5])
+def test_day7_periodic_negative_frequency(waveform, frequency):
+    with pytest.raises(ValueError):
+        waveform(frequency, 100, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("frequency", [
+    np.nan, np.inf, -np.inf
+])
+def test_day7_periodic_non_finite_frequency(waveform, frequency):
+    with pytest.raises(ValueError):
+        waveform(frequency, 100, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("fs", [
+    True, False, np.bool_(True),
+    "100", 1 + 2j, None
+])
+def test_day7_periodic_invalid_fs_type(waveform, fs):
+    with pytest.raises(TypeError):
+        waveform(5, fs, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("fs", [
+    0, -100, np.nan, np.inf, -np.inf
+])
+def test_day7_periodic_invalid_fs_value(waveform, fs):
+    with pytest.raises(ValueError):
+        waveform(5, fs, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("amplitude", [
+    True, False, np.bool_(True),
+    "2", 1 + 2j, None
+])
+def test_day7_periodic_invalid_amplitude_type(waveform, amplitude):
+    with pytest.raises(TypeError):
+        waveform(5, 100, 10, amplitude=amplitude)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("amplitude", [
+    np.nan, np.inf, -np.inf
+])
+def test_day7_periodic_non_finite_amplitude(waveform, amplitude):
+    with pytest.raises(ValueError):
+        waveform(5, 100, 10, amplitude=amplitude)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("phase", [
+    True, False, np.bool_(True),
+    "1.5", 1 + 2j, None
+])
+def test_day7_periodic_invalid_phase_type(waveform, phase):
+    with pytest.raises(TypeError):
+        waveform(5, 100, 10, phase=phase)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("phase", [
+    np.nan, np.inf, -np.inf
+])
+def test_day7_periodic_non_finite_phase(waveform, phase):
+    with pytest.raises(ValueError):
+        waveform(5, 100, 10, phase=phase)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("offset", [
+    True, False, np.bool_(True),
+    "3", 1 + 2j, None
+])
+def test_day7_periodic_invalid_offset_type(waveform, offset):
+    with pytest.raises(TypeError):
+        waveform(5, 100, 10, offset=offset)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+@pytest.mark.parametrize("offset", [
+    np.nan, np.inf, -np.inf
+])
+def test_day7_periodic_non_finite_offset(waveform, offset):
+    with pytest.raises(ValueError):
+        waveform(5, 100, 10, offset=offset)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+def test_day7_periodic_nyquist_warning(waveform):
+    with pytest.warns(UserWarning, match="Nyquist"):
+        waveform(60, 100, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.sawtooth,
+    generator.triangle,
+])
+def test_day7_periodic_fractional_n_samples(waveform):
+    with pytest.warns(UserWarning, match="Fractional"):
+        result = waveform(5, 100, 5.7)
+
+    assert result.n_samples == 6
+
+
+# --------------------------------------------------
+# IMPULSE GENERATOR TESTS
+# --------------------------------------------------
+
+def test_impulse_default_values():
+    result = generator.impulse(100, 5)
+
+    expected = np.array([1, 0, 0, 0, 0])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_impulse_custom_delay():
+    result = generator.impulse(100, 8, delay=3)
+
+    expected = np.array([0, 0, 0, 1, 0, 0, 0, 0])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_impulse_custom_amplitude():
+    result = generator.impulse(
+        100, 8,
+        delay=3,
+        amplitude=5
+    )
+
+    expected = np.array([0, 0, 0, 5, 0, 0, 0, 0])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_impulse_negative_amplitude():
+    result = generator.impulse(
+        100, 8,
+        delay=3,
+        amplitude=-5
+    )
+
+    expected = np.array([0, 0, 0, -5, 0, 0, 0, 0])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_impulse_custom_offset():
+    result = generator.impulse(
+        100, 8,
+        delay=3,
+        offset=2
+    )
+
+    expected = np.array([2, 2, 2, 3, 2, 2, 2, 2])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_impulse_custom_amplitude_and_offset():
+    result = generator.impulse(
+        100, 8,
+        delay=3,
+        amplitude=5,
+        offset=2
+    )
+
+    expected = np.array([2, 2, 2, 7, 2, 2, 2, 2])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_impulse_at_first_sample():
+    result = generator.impulse(100, 5, delay=0, amplitude=4)
+
+    expected = np.array([4, 0, 0, 0, 0])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_impulse_at_last_sample():
+    result = generator.impulse(100, 5, delay=4, amplitude=4)
+
+    expected = np.array([0, 0, 0, 0, 4])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+# --------------------------------------------------
+# STEP GENERATOR TESTS
+# --------------------------------------------------
+
+def test_step_default_values():
+    result = generator.step(100, 5)
+
+    expected = np.array([1, 1, 1, 1, 1])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_step_custom_delay():
+    result = generator.step(100, 8, delay=3)
+
+    expected = np.array([0, 0, 0, 1, 1, 1, 1, 1])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_step_custom_amplitude():
+    result = generator.step(
+        100, 8,
+        delay=3,
+        amplitude=5
+    )
+
+    expected = np.array([0, 0, 0, 5, 5, 5, 5, 5])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_step_negative_amplitude():
+    result = generator.step(
+        100, 8,
+        delay=3,
+        amplitude=-5
+    )
+
+    expected = np.array([0, 0, 0, -5, -5, -5, -5, -5])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_step_custom_offset():
+    result = generator.step(
+        100, 8,
+        delay=3,
+        offset=2
+    )
+
+    expected = np.array([2, 2, 2, 3, 3, 3, 3, 3])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_step_custom_amplitude_and_offset():
+    result = generator.step(
+        100, 8,
+        delay=3,
+        amplitude=5,
+        offset=2
+    )
+
+    expected = np.array([2, 2, 2, 7, 7, 7, 7, 7])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_step_at_first_sample():
+    result = generator.step(100, 5, delay=0, amplitude=4)
+
+    expected = np.array([4, 4, 4, 4, 4])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+def test_step_at_last_sample():
+    result = generator.step(100, 5, delay=4, amplitude=4)
+
+    expected = np.array([0, 0, 0, 0, 4])
+
+    np.testing.assert_array_equal(result.data, expected)
+
+
+# --------------------------------------------------
+# APERIODIC GENERATOR VALIDATION
+# Applies to impulse and step
+# --------------------------------------------------
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("fs", [
+    True, False, np.bool_(True),
+    "100", 1 + 2j, None
+])
+def test_day7_aperiodic_invalid_fs_type(waveform, fs):
+    with pytest.raises(TypeError):
+        waveform(fs, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("fs", [
+    0, -100, np.nan, np.inf, -np.inf
+])
+def test_day7_aperiodic_invalid_fs_value(waveform, fs):
+    with pytest.raises(ValueError):
+        waveform(fs, 10)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("amplitude", [
+    True, False, np.bool_(True),
+    "2", 1 + 2j, None
+])
+def test_day7_aperiodic_invalid_amplitude_type(waveform, amplitude):
+    with pytest.raises(TypeError):
+        waveform(100, 10, amplitude=amplitude)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("amplitude", [
+    np.nan, np.inf, -np.inf
+])
+def test_day7_aperiodic_non_finite_amplitude(waveform, amplitude):
+    with pytest.raises(ValueError):
+        waveform(100, 10, amplitude=amplitude)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("offset", [
+    True, False, np.bool_(True),
+    "2", 1 + 2j, None
+])
+def test_day7_aperiodic_invalid_offset_type(waveform, offset):
+    with pytest.raises(TypeError):
+        waveform(100, 10, offset=offset)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("offset", [
+    np.nan, np.inf, -np.inf
+])
+def test_day7_aperiodic_non_finite_offset(waveform, offset):
+    with pytest.raises(ValueError):
+        waveform(100, 10, offset=offset)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("delay", [
+    True, False, np.bool_(True),
+     2.5, "2", 1 + 2j, None
+])
+
+def test_day7_invalid_delay_type(waveform, delay):
+    with pytest.raises(TypeError):
+        waveform(100, 10, delay=delay)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+@pytest.mark.parametrize("delay", [-1, 10, 100])
+def test_day7_invalid_delay_value(waveform, delay):
+    with pytest.raises(ValueError):
+        waveform(100, 10, delay=delay)
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+def test_day7_numpy_integer_delay_is_accepted(waveform):
+    result = waveform(100, 8, delay=np.int64(3))
+
+    assert result.n_samples == 8
+
+
+@pytest.mark.parametrize("waveform", [
+    generator.impulse,
+    generator.step,
+])
+def test_day7_aperiodic_fractional_n_samples(waveform):
+    with pytest.warns(UserWarning, match="Fractional"):
+        result = waveform(100, 5.7)
+
+    assert result.n_samples == 6
+
+
+# --------------------------------------------------
+# COMMON OUTPUT PROPERTY TESTS
+# Applies to all four Day 7 generators
+# --------------------------------------------------
+
+@pytest.mark.parametrize("waveform, args", [
+    (generator.sawtooth, (1, 100, 100)),
+    (generator.triangle, (1, 100, 100)),
+    (generator.impulse, (100, 100)),
+    (generator.step, (100, 100)),
+])
+def test_day7_output_is_signal(waveform, args):
+    result = waveform(*args)
+
+    assert isinstance(result, Signal)
+
+
+@pytest.mark.parametrize("waveform, args", [
+    (generator.sawtooth, (1, 100, 100)),
+    (generator.triangle, (1, 100, 100)),
+    (generator.impulse, (100, 100)),
+    (generator.step, (100, 100)),
+])
+def test_day7_output_properties(waveform, args):
+    result = waveform(*args)
+
+    assert result.fs == 100.0
+    assert result.n_samples == 100
+    assert len(result.data) == 100
+    assert result.duration == pytest.approx(1.0)
+    assert len(result.time) == 100
+
+
+@pytest.mark.parametrize("waveform, args", [
+    (generator.sawtooth, (1, 100, 100)),
+    (generator.triangle, (1, 100, 100)),
+    (generator.impulse, (100, 100)),
+    (generator.step, (100, 100)),
+])
+def test_day7_output_is_finite(waveform, args):
+    result = waveform(*args)
+
+    assert np.all(np.isfinite(result.data))
+
+
+# --------------------------------------------------
+# MATHEMATICAL RELATIONSHIP TESTS
+# --------------------------------------------------
+
+@pytest.mark.parametrize("delay", [0, 1, 4, 9])
+def test_step_first_difference_equals_impulse(delay):
+    n_samples = 10
+    amplitude = 5
+    offset = 2
+
+    step_signal = generator.step(
+        100, n_samples,
+        delay=delay,
+        amplitude=amplitude,
+        offset=offset
+    )
+
+    impulse_signal = generator.impulse(
+        100, n_samples,
+        delay=delay,
+        amplitude=amplitude,
+        offset=0
+    )
+
+    step_difference = np.diff(
+        step_signal.data,
+        prepend=offset
+    )
+
+    np.testing.assert_allclose(
+        step_difference,
+        impulse_signal.data
+    )
+
+
+def test_impulse_contains_exactly_one_amplitude_change():
+    result = generator.impulse(
+        100, 10,
+        delay=4,
+        amplitude=5,
+        offset=2
+    )
+
+    changed_samples = np.count_nonzero(result.data != 2)
+
+    assert changed_samples == 1
+
+
+def test_step_remains_constant_after_delay():
+    result = generator.step(
+        100, 10,
+        delay=4,
+        amplitude=5,
+        offset=2
+    )
+
+    assert np.all(result.data[:4] == 2)
+    assert np.all(result.data[4:] == 7)

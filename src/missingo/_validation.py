@@ -86,7 +86,7 @@ def nyquist_frequency_check(frequency, fs):
         warnings.warn(
             "frequency exceeds Nyquist frequency (fs/2). This may cause aliasing.", UserWarning
         )
-def validate_inputs(frequency, fs, n_samples, amplitude, phase, offset):
+def validate_inputs_periodic(frequency, fs, n_samples, amplitude, phase, offset):
     validate_frequency(frequency)
     validate_fs(fs)
     nyquist_frequency_check(frequency, fs)
@@ -110,5 +110,55 @@ def validate_duty(duty):
     if duty <=0 or duty >= 1:
         raise ValueError("duty must be between 0 and 1")
     
+
+def validate_inputs_aperiodic(fs, n_samples, amplitude, offset):
+    validate_fs(fs)
+    n_samples = validate_n_samples(n_samples)
+    validate_amplitude(amplitude)
+    validate_offset(offset)
+
+    return n_samples
+
+# def validate_delay(delay, n_samples):
+
+#     if isinstance(delay, (bool, np.bool_)):
+#         raise TypeError("delay must be an integer")
+
+#     if not isinstance(delay, (int, np.integer)):
+#         if delay.is_integer():
+#             delay = int(delay)
+#         else:
+        
+#             raise TypeError("delay must be an integer")
+    
+#     if delay < 0 or delay >= n_samples:
+#         raise ValueError("delay must be a non-negative integer less than n_samples")
+
+
+def validate_delay(delay, n_samples):
+
+    if isinstance(delay, (bool, np.bool_)):
+        raise TypeError("delay must be an integer")
+
+    if isinstance(delay, (float, np.floating)):
+        if not np.isfinite(delay):
+            raise ValueError("delay must be finite")
+
+        if not delay.is_integer():
+            raise TypeError("delay must be an integer")
+
+        delay = int(delay)
+
+    elif not isinstance(delay, (int, np.integer)):
+        raise TypeError("delay must be an integer")
+
+    if delay < 0 or delay >= n_samples:
+        raise ValueError(
+            "delay must be a non-negative integer less than n_samples"
+        )
+
+    return int(delay)
+
+
     
     
