@@ -2067,3 +2067,503 @@ def test_dc_fractional_n_samples():
         signal = generator.dc(fs=100, n_samples=2.5)
 
     assert len(signal.data) == 2  # Adjust if your rounding policy produces 3.
+
+
+
+# ==========================================
+# GAUSSIAN PULSE TEST SUITE
+# ==========================================
+
+
+# ------------------------------------------
+# MATHEMATICAL BEHAVIOUR
+# ------------------------------------------
+
+def test_gaussian_pulse_default():
+    signal = generator.gaussian_pulse(fs=4, n_samples=5)
+
+    t = np.arange(5) / 4
+    expected = np.exp(-(t ** 2) / 2)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_gaussian_pulse_positive_amplitude():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        amplitude=5
+    )
+
+    t = np.arange(5) / 4
+    expected = 5 * np.exp(-(t ** 2) / 2)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_gaussian_pulse_negative_amplitude():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        amplitude=-3
+    )
+
+    t = np.arange(5) / 4
+    expected = -3 * np.exp(-(t ** 2) / 2)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_gaussian_pulse_zero_amplitude():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        amplitude=0
+    )
+
+    expected = np.zeros(5)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_gaussian_pulse_peak_at_mean():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        amplitude=5,
+        mean=0.5,
+        std=0.25
+    )
+
+    assert signal.data[2] == pytest.approx(5.0)
+
+
+def test_gaussian_pulse_symmetry():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=9,
+        amplitude=5,
+        mean=1.0,
+        std=0.5
+    )
+
+    np.testing.assert_allclose(
+        signal.data,
+        signal.data[::-1]
+    )
+
+
+# ------------------------------------------
+# MEAN BEHAVIOUR
+# ------------------------------------------
+
+def test_gaussian_pulse_with_positive_mean():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        mean=0.5
+    )
+
+    assert signal.data[2] == pytest.approx(1.0)
+
+
+def test_gaussian_pulse_with_negative_mean():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        mean=-0.5
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_gaussian_pulse_with_zero_mean():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        mean=0
+    )
+
+    assert signal.data[0] == pytest.approx(1.0)
+
+
+# ------------------------------------------
+# STANDARD DEVIATION BEHAVIOUR
+# ------------------------------------------
+
+def test_gaussian_pulse_small_std():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        mean=0.5,
+        std=0.25
+    )
+
+    assert signal.data[2] == pytest.approx(1.0)
+
+
+def test_gaussian_pulse_large_std():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        mean=0.5,
+        std=1.0
+    )
+
+    assert signal.data[1] > 0.0
+
+
+def test_gaussian_pulse_larger_std_produces_wider_pulse():
+    narrow = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        mean=0.5,
+        std=0.25
+    )
+
+    wide = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        mean=0.5,
+        std=1.0
+    )
+
+    assert wide.data[0] > narrow.data[0]
+    assert wide.data[4] > narrow.data[4]
+
+
+# ------------------------------------------
+# OFFSET BEHAVIOUR
+# ------------------------------------------
+
+def test_gaussian_pulse_with_positive_offset():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        amplitude=2,
+        mean=0,
+        std=1,
+        offset=3
+    )
+
+    expected = 3 + 2 * np.exp(-((np.arange(5) / 4) ** 2) / 2)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_gaussian_pulse_with_negative_offset():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        amplitude=2,
+        mean=0,
+        std=1,
+        offset=-3
+    )
+
+    expected = -3 + 2 * np.exp(-((np.arange(5) / 4) ** 2) / 2)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_gaussian_pulse_with_zero_offset():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        offset=0
+    )
+
+    expected = np.exp(-((np.arange(5) / 4) ** 2) / 2)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_gaussian_pulse_offset_and_amplitude():
+    signal = generator.gaussian_pulse(
+        fs=4,
+        n_samples=5,
+        amplitude=4,
+        mean=0.5,
+        std=0.25,
+        offset=2
+    )
+
+    assert signal.data[2] == pytest.approx(6.0)
+
+
+# ------------------------------------------
+# SAMPLING FREQUENCY BEHAVIOUR
+# ------------------------------------------
+
+def test_gaussian_pulse_different_sampling_frequencies():
+    signal_1 = generator.gaussian_pulse(
+        fs=100,
+        n_samples=100,
+        mean=0.2,
+        std=0.1
+    )
+
+    signal_2 = generator.gaussian_pulse(
+        fs=200,
+        n_samples=200,
+        mean=0.2,
+        std=0.1
+    )
+
+    assert signal_1.data[20] == pytest.approx(
+        signal_2.data[40]
+    )
+
+
+# ------------------------------------------
+# OUTPUT AND SIGNAL METADATA
+# ------------------------------------------
+
+def test_gaussian_pulse_returns_signal_object():
+    signal = generator.gaussian_pulse(
+        fs=100,
+        n_samples=100
+    )
+
+    assert isinstance(signal, Signal)
+
+
+def test_gaussian_pulse_output_length():
+    signal = generator.gaussian_pulse(
+        fs=100,
+        n_samples=200
+    )
+
+    assert signal.n_samples == 200
+    assert len(signal.data) == 200
+
+
+def test_gaussian_pulse_sampling_frequency():
+    signal = generator.gaussian_pulse(
+        fs=8000,
+        n_samples=100
+    )
+
+    assert signal.fs == 8000
+
+
+def test_gaussian_pulse_output_is_finite():
+    signal = generator.gaussian_pulse(
+        fs=1000,
+        n_samples=100,
+        amplitude=5,
+        mean=0.05,
+        std=0.01,
+        offset=2
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_gaussian_pulse_output_dtype():
+    signal = generator.gaussian_pulse(
+        fs=100,
+        n_samples=10
+    )
+
+    assert np.issubdtype(signal.data.dtype, np.floating)
+
+
+# ------------------------------------------
+# AMPLITUDE VALIDATION
+# ------------------------------------------
+
+@pytest.mark.parametrize("amplitude", [
+    True,
+    False,
+    np.bool_(True),
+    "5",
+    None,
+    2 + 3j
+])
+def test_gaussian_pulse_invalid_amplitude_type(amplitude):
+    with pytest.raises(TypeError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            amplitude=amplitude
+        )
+
+
+@pytest.mark.parametrize("amplitude", [
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_gaussian_pulse_non_finite_amplitude(amplitude):
+    with pytest.raises(ValueError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            amplitude=amplitude
+        )
+
+
+# ------------------------------------------
+# MEAN VALIDATION
+# ------------------------------------------
+
+@pytest.mark.parametrize("mean", [
+    True,
+    False,
+    np.bool_(True),
+    "2",
+    None,
+    2 + 3j
+])
+def test_gaussian_pulse_invalid_mean_type(mean):
+    with pytest.raises(TypeError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            mean=mean
+        )
+
+
+@pytest.mark.parametrize("mean", [
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_gaussian_pulse_non_finite_mean(mean):
+    with pytest.raises(ValueError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            mean=mean
+        )
+
+
+# ------------------------------------------
+# STANDARD DEVIATION VALIDATION
+# ------------------------------------------
+
+@pytest.mark.parametrize("std", [
+    True,
+    False,
+    np.bool_(True),
+    "1",
+    None,
+    2 + 3j
+])
+def test_gaussian_pulse_invalid_std_type(std):
+    with pytest.raises(TypeError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            std=std
+        )
+
+
+@pytest.mark.parametrize("std", [
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_gaussian_pulse_non_finite_std(std):
+    with pytest.raises(ValueError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            std=std
+        )
+
+
+@pytest.mark.parametrize("std", [
+    0,
+    -1,
+    -0.5
+])
+def test_gaussian_pulse_invalid_std_range(std):
+    with pytest.raises(ValueError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            std=std
+        )
+
+
+# ------------------------------------------
+# OFFSET VALIDATION
+# ------------------------------------------
+
+@pytest.mark.parametrize("offset", [
+    True,
+    False,
+    np.bool_(True),
+    "5",
+    None,
+    2 + 3j
+])
+def test_gaussian_pulse_invalid_offset_type(offset):
+    with pytest.raises(TypeError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            offset=offset
+        )
+
+
+@pytest.mark.parametrize("offset", [
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_gaussian_pulse_non_finite_offset(offset):
+    with pytest.raises(ValueError):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=10,
+            offset=offset
+        )
+
+
+# ------------------------------------------
+# SAMPLING FREQUENCY VALIDATION
+# ------------------------------------------
+
+@pytest.mark.parametrize("fs", [
+    0,
+    -1,
+    np.nan,
+    np.inf
+])
+def test_gaussian_pulse_invalid_fs(fs):
+    with pytest.raises((TypeError, ValueError)):
+        generator.gaussian_pulse(
+            fs=fs,
+            n_samples=10
+        )
+
+
+# ------------------------------------------
+# SAMPLE COUNT VALIDATION
+# ------------------------------------------
+
+@pytest.mark.parametrize("n_samples", [
+    0,
+    -1,
+    True,
+    "10"
+])
+def test_gaussian_pulse_invalid_n_samples(n_samples):
+    with pytest.raises((TypeError, ValueError)):
+        generator.gaussian_pulse(
+            fs=100,
+            n_samples=n_samples
+        )
+
+
+def test_gaussian_pulse_fractional_n_samples():
+    with pytest.warns(UserWarning, match="rounded"):
+        signal = generator.gaussian_pulse(
+            fs=100,
+            n_samples=2.5
+        )
+
+    assert len(signal.data) == 2  # Adjust if your rounding policy produces 3.

@@ -54,7 +54,7 @@ def ramp(fs, n_samples, delay=0, slope=1.0, offset=0.0):
 def dc(fs, n_samples, amplitude = 1):
 
     #validation for all inputs 
-    n_samples = validate_inputs_aperiodic(fs, n_samples,amplitude=amplitude)
+    n_samples = validate_inputs_aperiodic(fs, n_samples, amplitude = amplitude)
 
     #mathematical expression for DC signal
     x = np.full(n_samples, amplitude, dtype = float)
@@ -63,3 +63,19 @@ def dc(fs, n_samples, amplitude = 1):
     signal = Signal(x,fs)
 
     return signal
+
+#Gaussian pulse function
+def gaussian_pulse(fs, n_samples, amplitude=1, mean = 0, std = 1, offset= 0.0):
+
+    #validation for all inputs
+    n_samples = validate_inputs_aperiodic(fs, n_samples, amplitude = amplitude, mean = mean, std = std, offset = offset)
+
+    #mathematical expression for gaussian pulse
+    t = np.arange(n_samples) / fs
+    x = offset + amplitude * np.exp(-((t - mean) ** 2) / (2 * std ** 2))
+
+    #create a signal object with generated Gaussian pulse data and the sampling frequency
+    signal = Signal(x,fs)
+
+    return signal 
+

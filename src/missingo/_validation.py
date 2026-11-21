@@ -120,17 +120,51 @@ def validate_slope(slope):
         
     if not np.isfinite(slope):
         raise ValueError("slope must be finite")
+
+def validate_std(std):
+    if isinstance(std, (bool, np.bool_)):
+        raise TypeError("std must be a number")
+            
+    if not isinstance(std, (int, float, np.integer, np.floating)):
+        raise TypeError("std must be a number")
+            
+    if not np.isfinite(std):
+        raise ValueError("std must be finite")
+
+    if std <=0 :
+        raise ValueError("std must be greater than zero")
+
+def validate_mean(mean):
+    if isinstance(mean, (bool, np.bool_)):
+        raise TypeError("mean must be a number")
+            
+    if not isinstance(mean, (int, float, np.integer, np.floating)):
+        raise TypeError("mean must be a number")
+            
+    if not np.isfinite(mean):
+        raise ValueError("mean must be finite")
     
 
-def validate_inputs_aperiodic(fs, n_samples, amplitude=_NotProvided, offset= 0, slope=_NotProvided):
+def validate_inputs_aperiodic(fs, n_samples, amplitude=_NotProvided, offset= _NotProvided, slope=_NotProvided, std = _NotProvided, mean = _NotProvided):
+    
     validate_fs(fs)
+    
     n_samples = validate_n_samples(n_samples)
+    
     if amplitude is not _NotProvided:
         validate_amplitude(amplitude)
+    
     if offset is not _NotProvided:
         validate_offset(offset)
+    
     if slope is not _NotProvided:
         validate_slope(slope)
+    
+    if std is not _NotProvided:
+        validate_std(std)
+
+    if mean is not _NotProvided:
+        validate_mean(mean)
 
     return n_samples
 
