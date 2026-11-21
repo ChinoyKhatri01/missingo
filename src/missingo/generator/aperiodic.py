@@ -50,4 +50,16 @@ def ramp(fs, n_samples, delay=0, slope=1.0, offset=0.0):
 
     return signal
 
-#
+#DC signal function
+def dc(fs, n_samples, amplitude = 1):
+
+    #validation for all inputs 
+    n_samples = validate_inputs_aperiodic(fs, n_samples,amplitude=amplitude)
+
+    #mathematical expression for DC signal
+    x = np.full(n_samples, amplitude, dtype = float)
+
+    #create a signal object with the generated DC signal data and the sampling frequency
+    signal = Signal(x,fs)
+
+    return signal

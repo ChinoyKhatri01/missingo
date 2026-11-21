@@ -1884,3 +1884,186 @@ def test_ramp_fractional_n_samples():
         signal = generator.ramp(fs=100, n_samples=2.5)
 
     assert len(signal.data) == 2  # Adjust if your rounding policy produces 3.
+
+
+
+
+# ===================================
+# DC SIGNAL TEST SUITE
+# ===================================
+
+
+# -----------------------------------
+# MATHEMATICAL BEHAVIOUR
+# -----------------------------------
+
+def test_dc_default():
+    signal = generator.dc(fs=100, n_samples=5)
+
+    expected = np.array([1, 1, 1, 1, 1])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_dc_positive_amplitude():
+    signal = generator.dc(fs=100, n_samples=5, amplitude=5)
+
+    expected = np.full(5, 5.0)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_dc_negative_amplitude():
+    signal = generator.dc(fs=100, n_samples=5, amplitude=-3)
+
+    expected = np.full(5, -3.0)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_dc_zero_amplitude():
+    signal = generator.dc(fs=100, n_samples=5, amplitude=0)
+
+    expected = np.zeros(5)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_dc_fractional_amplitude():
+    signal = generator.dc(fs=100, n_samples=5, amplitude=2.5)
+
+    expected = np.full(5, 2.5)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+# -----------------------------------
+# SAMPLING FREQUENCY BEHAVIOUR
+# -----------------------------------
+
+def test_dc_different_sampling_frequencies():
+    signal_1 = generator.dc(fs=100, n_samples=5, amplitude=4)
+    signal_2 = generator.dc(fs=1000, n_samples=5, amplitude=4)
+
+    np.testing.assert_array_equal(signal_1.data, signal_2.data)
+
+
+# -----------------------------------
+# OUTPUT AND SIGNAL METADATA
+# -----------------------------------
+
+def test_dc_returns_signal_object():
+    signal = generator.dc(fs=100, n_samples=100)
+
+    assert isinstance(signal, Signal)
+
+
+def test_dc_output_length():
+    signal = generator.dc(fs=100, n_samples=200)
+
+    assert signal.n_samples == 200
+    assert len(signal.data) == 200
+
+
+def test_dc_sampling_frequency():
+    signal = generator.dc(fs=8000, n_samples=100)
+
+    assert signal.fs == 8000
+
+
+def test_dc_output_is_finite():
+    signal = generator.dc(
+        fs=1000,
+        n_samples=100,
+        amplitude=5
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_dc_output_is_constant():
+    signal = generator.dc(
+        fs=100,
+        n_samples=100,
+        amplitude=7
+    )
+
+    assert np.all(signal.data == 7)
+
+
+def test_dc_output_dtype():
+    signal = generator.dc(fs=100, n_samples=10)
+
+    assert np.issubdtype(signal.data.dtype, np.floating)
+
+
+# -----------------------------------
+# AMPLITUDE VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("amplitude", [
+    True,
+    False,
+    np.bool_(True),
+    "5",
+    None,
+    2 + 3j
+])
+def test_dc_invalid_amplitude_type(amplitude):
+    with pytest.raises(TypeError):
+        generator.dc(
+            fs=100,
+            n_samples=10,
+            amplitude=amplitude
+        )
+
+
+@pytest.mark.parametrize("amplitude", [
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_dc_non_finite_amplitude(amplitude):
+    with pytest.raises(ValueError):
+        generator.dc(
+            fs=100,
+            n_samples=10,
+            amplitude=amplitude
+        )
+
+
+# -----------------------------------
+# SAMPLING FREQUENCY VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("fs", [
+    0,
+    -1,
+    np.nan,
+    np.inf
+])
+def test_dc_invalid_fs(fs):
+    with pytest.raises((TypeError, ValueError)):
+        generator.dc(fs=fs, n_samples=10)
+
+
+# -----------------------------------
+# SAMPLE COUNT VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("n_samples", [
+    0,
+    -1,
+    True,
+    "10"
+])
+def test_dc_invalid_n_samples(n_samples):
+    with pytest.raises((TypeError, ValueError)):
+        generator.dc(fs=100, n_samples=n_samples)
+
+
+def test_dc_fractional_n_samples():
+    with pytest.warns(UserWarning, match="rounded"):
+        signal = generator.dc(fs=100, n_samples=2.5)
+
+    assert len(signal.data) == 2  # Adjust if your rounding policy produces 3.
