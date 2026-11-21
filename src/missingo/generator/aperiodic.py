@@ -79,3 +79,19 @@ def gaussian_pulse(fs, n_samples, amplitude=1, mean = 0, std = 1, offset= 0.0):
 
     return signal 
 
+#White Gaussian Noise function
+def white_noise_gaussian(fs, n_samples, mean = 0, std = 1, seed = None, offset = 0.0):
+
+    #validation for all inputs
+    n_samples = validate_inputs_aperiodic(fs, n_samples, mean = mean, std = std, offset = offset, seed = seed)
+
+    #mathematical representation
+    rng = np.random.default_rng(seed)
+    noise = offset + rng.normal(mean, std, n_samples)
+
+    #create a signal object with generated White Gaussian Noise data and the sampling frequency
+
+    signal = Signal(noise,fs)
+
+    return signal
+

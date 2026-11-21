@@ -143,9 +143,23 @@ def validate_mean(mean):
             
     if not np.isfinite(mean):
         raise ValueError("mean must be finite")
+
+def validate_seed(seed):
+    if seed is None:
+        return
+
+    if isinstance(seed, (bool, np.bool_)):
+        raise TypeError("seed must be a non-negative integer or None")
+
+    if not isinstance(seed, (int, np.integer)):
+        raise TypeError("seed must be a non-negative integer or None")
+
+    if seed < 0:
+        raise ValueError("seed must be non-negative")
+
     
 
-def validate_inputs_aperiodic(fs, n_samples, amplitude=_NotProvided, offset= _NotProvided, slope=_NotProvided, std = _NotProvided, mean = _NotProvided):
+def validate_inputs_aperiodic(fs, n_samples, amplitude=_NotProvided, offset= _NotProvided, slope=_NotProvided, std = _NotProvided, mean = _NotProvided, seed = _NotProvided):
     
     validate_fs(fs)
     
@@ -165,6 +179,9 @@ def validate_inputs_aperiodic(fs, n_samples, amplitude=_NotProvided, offset= _No
 
     if mean is not _NotProvided:
         validate_mean(mean)
+
+    if seed is not _NotProvided:
+        validate_seed(seed)
 
     return n_samples
 

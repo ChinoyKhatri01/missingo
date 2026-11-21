@@ -2567,3 +2567,443 @@ def test_gaussian_pulse_fractional_n_samples():
         )
 
     assert len(signal.data) == 2  # Adjust if your rounding policy produces 3.
+
+
+
+
+
+# ==========================================
+# WHITE GAUSSIAN NOISE TEST SUITE
+# ==========================================
+
+
+# MATHEMATICAL AND STATISTICAL BEHAVIOUR
+
+def test_white_noise_gaussian_default():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_white_noise_gaussian_mean():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        mean=3.0,
+        seed=42
+    )
+
+    assert np.mean(signal.data) == pytest.approx(3.0, abs=0.03)
+
+
+def test_white_noise_gaussian_std():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        std=2.0,
+        seed=42
+    )
+
+    assert np.std(signal.data) == pytest.approx(2.0, abs=0.03)
+
+
+def test_white_noise_gaussian_variance():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        std=2.0,
+        seed=42
+    )
+
+    assert np.var(signal.data) == pytest.approx(4.0, abs=0.12)
+
+
+def test_white_noise_gaussian_negative_mean():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        mean=-3.0,
+        seed=42
+    )
+
+    assert np.mean(signal.data) == pytest.approx(-3.0, abs=0.03)
+
+
+# def test_white_noise_gaussian_zero_std():
+#     with pytest.raises("std must be greater than zero"):
+#         signal = generator.white_noise_gaussian(
+#             fs=1000,
+#             n_samples=100,
+#             std=0.0,
+#             seed=42
+#         )
+
+    # This should raise ValueError because std must be positive.
+
+
+# OFFSET BEHAVIOUR
+
+def test_white_noise_gaussian_positive_offset():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        mean=0,
+        std=1,
+        offset=5,
+        seed=42
+    )
+
+    assert np.mean(signal.data) == pytest.approx(5.0, abs=0.03)
+
+
+def test_white_noise_gaussian_negative_offset():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        mean=0,
+        std=1,
+        offset=-5,
+        seed=42
+    )
+
+    assert np.mean(signal.data) == pytest.approx(-5.0, abs=0.03)
+
+
+def test_white_noise_gaussian_mean_and_offset():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        mean=2,
+        std=1,
+        offset=3,
+        seed=42
+    )
+
+    assert np.mean(signal.data) == pytest.approx(5.0, abs=0.03)
+
+
+def test_white_noise_gaussian_offset_does_not_change_std():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        mean=2,
+        std=3,
+        offset=10,
+        seed=42
+    )
+
+    assert np.std(signal.data) == pytest.approx(3.0, abs=0.04)
+
+
+def test_white_noise_gaussian_zero_offset():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        mean=0,
+        std=1,
+        offset=0,
+        seed=42
+    )
+
+    assert np.mean(signal.data) == pytest.approx(0.0, abs=0.03)
+
+
+# RANDOMNESS AND REPRODUCIBILITY
+
+def test_white_noise_gaussian_same_seed_produces_same_output():
+    signal_1 = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    signal_2 = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    np.testing.assert_array_equal(signal_1.data, signal_2.data)
+
+
+def test_white_noise_gaussian_different_seeds_produce_different_output():
+    signal_1 = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    signal_2 = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=1000,
+        seed=100
+    )
+
+    assert not np.array_equal(signal_1.data, signal_2.data)
+
+
+def test_white_noise_gaussian_zero_seed():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=100,
+        seed=0
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_white_noise_gaussian_none_seed():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=100,
+        seed=None
+    )
+
+    assert len(signal.data) == 100
+
+
+# WHITE NOISE PROPERTY
+
+def test_white_noise_gaussian_samples_are_uncorrelated():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=50000,
+        seed=42
+    )
+
+    correlation = np.corrcoef(
+        signal.data[:-1],
+        signal.data[1:]
+    )[0, 1]
+
+    assert abs(correlation) < 0.03
+
+
+# OUTPUT AND METADATA
+
+def test_white_noise_gaussian_returns_signal_object():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=100
+    )
+
+    assert isinstance(signal, Signal)
+
+
+def test_white_noise_gaussian_output_length():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=500
+    )
+
+    assert signal.n_samples == 500
+    assert len(signal.data) == 500
+
+
+def test_white_noise_gaussian_sampling_frequency():
+    signal = generator.white_noise_gaussian(
+        fs=8000,
+        n_samples=100
+    )
+
+    assert signal.fs == 8000
+
+
+def test_white_noise_gaussian_output_is_finite():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=1000,
+        mean=2,
+        std=3,
+        offset=5,
+        seed=42
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_white_noise_gaussian_output_dtype():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=100
+    )
+
+    assert np.issubdtype(signal.data.dtype, np.floating)
+
+
+# MEAN VALIDATION
+
+@pytest.mark.parametrize(
+    "mean",
+    [True, False, np.bool_(True), "2", None, 2 + 3j]
+)
+def test_white_noise_gaussian_invalid_mean_type(mean):
+    with pytest.raises(TypeError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            mean=mean
+        )
+
+
+@pytest.mark.parametrize(
+    "mean",
+    [np.nan, np.inf, -np.inf]
+)
+def test_white_noise_gaussian_non_finite_mean(mean):
+    with pytest.raises(ValueError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            mean=mean
+        )
+
+
+# STD VALIDATION
+
+@pytest.mark.parametrize(
+    "std",
+    [True, False, np.bool_(True), "1", None, 2 + 3j]
+)
+def test_white_noise_gaussian_invalid_std_type(std):
+    with pytest.raises(TypeError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            std=std
+        )
+
+
+@pytest.mark.parametrize(
+    "std",
+    [np.nan, np.inf, -np.inf]
+)
+def test_white_noise_gaussian_non_finite_std(std):
+    with pytest.raises(ValueError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            std=std
+        )
+
+
+@pytest.mark.parametrize(
+    "std",
+    [0, -1, -0.5]
+)
+def test_white_noise_gaussian_invalid_std_range(std):
+    with pytest.raises(ValueError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            std=std
+        )
+
+
+# OFFSET VALIDATION
+
+@pytest.mark.parametrize(
+    "offset",
+    [True, False, np.bool_(True), "5", None, 2 + 3j]
+)
+def test_white_noise_gaussian_invalid_offset_type(offset):
+    with pytest.raises(TypeError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            offset=offset
+        )
+
+
+@pytest.mark.parametrize(
+    "offset",
+    [np.nan, np.inf, -np.inf]
+)
+def test_white_noise_gaussian_non_finite_offset(offset):
+    with pytest.raises(ValueError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            offset=offset
+        )
+
+
+# SEED VALIDATION
+
+@pytest.mark.parametrize(
+    "seed",
+    [True, False, np.bool_(True), 2.5, "42", 2 + 3j]
+)
+def test_white_noise_gaussian_invalid_seed_type(seed):
+    with pytest.raises(TypeError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            seed=seed
+        )
+
+
+@pytest.mark.parametrize(
+    "seed",
+    [-1, -10, -100]
+)
+def test_white_noise_gaussian_negative_seed(seed):
+    with pytest.raises(ValueError):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=100,
+            seed=seed
+        )
+
+
+def test_white_noise_gaussian_numpy_integer_seed():
+    signal = generator.white_noise_gaussian(
+        fs=1000,
+        n_samples=100,
+        seed=np.int64(42)
+    )
+
+    assert len(signal.data) == 100
+
+
+# FS VALIDATION
+
+@pytest.mark.parametrize(
+    "fs",
+    [0, -1, np.nan, np.inf]
+)
+def test_white_noise_gaussian_invalid_fs(fs):
+    with pytest.raises((TypeError, ValueError)):
+        generator.white_noise_gaussian(
+            fs=fs,
+            n_samples=100
+        )
+
+
+# N_SAMPLES VALIDATION
+
+@pytest.mark.parametrize(
+    "n_samples",
+    [0, -1, True, "100"]
+)
+def test_white_noise_gaussian_invalid_n_samples(n_samples):
+    with pytest.raises((TypeError, ValueError)):
+        generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=n_samples
+        )
+
+
+def test_white_noise_gaussian_fractional_n_samples():
+    with pytest.warns(UserWarning, match="rounded"):
+        signal = generator.white_noise_gaussian(
+            fs=1000,
+            n_samples=2.5,
+            seed=42
+        )
+
+    assert len(signal.data) == 2  # Adjust if your rounding policy differs.
