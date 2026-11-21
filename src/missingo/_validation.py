@@ -201,6 +201,33 @@ def validate_inputs_aperiodic(fs, n_samples, amplitude=_NotProvided, offset= _No
 #         raise ValueError("delay must be a non-negative integer less than n_samples")
 
 
+def validate_low(low):
+    if isinstance(low, (bool, np.bool_)):
+        raise TypeError("low must be a number")
+
+    if not isinstance(low, (int, float, np.integer, np.floating)):
+        raise TypeError("low must be a number")
+
+    if not np.isfinite(low):
+        raise ValueError("low must be finite")
+
+
+def validate_high(high):
+    if isinstance(high, (bool, np.bool_)):
+        raise TypeError("high must be a number")
+
+    if not isinstance(high, (int, float, np.integer, np.floating)):
+        raise TypeError("high must be a number")
+
+    if not np.isfinite(high):
+        raise ValueError("high must be finite")
+
+
+def validate_uniform_bounds(low, high):
+    if high <= low:
+        raise ValueError("high must be greater than low")
+
+
 def validate_delay(delay, n_samples):
 
     if isinstance(delay, (bool, np.bool_)):

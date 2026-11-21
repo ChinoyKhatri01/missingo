@@ -3007,3 +3007,514 @@ def test_white_noise_gaussian_fractional_n_samples():
         )
 
     assert len(signal.data) == 2  # Adjust if your rounding policy differs.
+
+
+# ==========================================
+# WHITE UNIFORM NOISE TEST SUITE
+# ==========================================
+
+
+# MATHEMATICAL AND STATISTICAL BEHAVIOUR
+
+def test_white_noise_uniform_default():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_white_noise_uniform_output_within_bounds():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=10000,
+        low=-2,
+        high=3,
+        seed=42
+    )
+
+    assert np.all(signal.data >= -2)
+    assert np.all(signal.data < 3)
+
+
+def test_white_noise_uniform_mean():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=50000,
+        low=-2,
+        high=4,
+        seed=42
+    )
+
+    expected_mean = (-2 + 4) / 2
+
+    assert np.mean(signal.data) == pytest.approx(
+        expected_mean,
+        abs=0.03
+    )
+
+
+def test_white_noise_uniform_variance():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=50000,
+        low=-2,
+        high=4,
+        seed=42
+    )
+
+    expected_variance = (4 - (-2)) ** 2 / 12
+
+    assert np.var(signal.data) == pytest.approx(
+        expected_variance,
+        abs=0.04
+    )
+
+
+def test_white_noise_uniform_standard_deviation():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=50000,
+        low=-2,
+        high=4,
+        seed=42
+    )
+
+    expected_std = (4 - (-2)) / np.sqrt(12)
+
+    assert np.std(signal.data) == pytest.approx(
+        expected_std,
+        abs=0.03
+    )
+
+
+def test_white_noise_uniform_positive_bounds():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=10000,
+        low=2,
+        high=6,
+        seed=42
+    )
+
+    assert np.all(signal.data >= 2)
+    assert np.all(signal.data < 6)
+
+
+def test_white_noise_uniform_negative_bounds():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=10000,
+        low=-6,
+        high=-2,
+        seed=42
+    )
+
+    assert np.all(signal.data >= -6)
+    assert np.all(signal.data < -2)
+
+
+def test_white_noise_uniform_zero_crossing_bounds():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=10000,
+        low=-3,
+        high=3,
+        seed=42
+    )
+
+    assert np.all(signal.data >= -3)
+    assert np.all(signal.data < 3)
+
+
+# OFFSET BEHAVIOUR
+
+def test_white_noise_uniform_positive_offset():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=10000,
+        low=-1,
+        high=1,
+        offset=5,
+        seed=42
+    )
+
+    assert np.all(signal.data >= 4)
+    assert np.all(signal.data < 6)
+
+
+def test_white_noise_uniform_negative_offset():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=10000,
+        low=-1,
+        high=1,
+        offset=-5,
+        seed=42
+    )
+
+    assert np.all(signal.data >= -6)
+    assert np.all(signal.data < -4)
+
+
+def test_white_noise_uniform_offset_shifts_mean():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=50000,
+        low=-2,
+        high=4,
+        offset=5,
+        seed=42
+    )
+
+    expected_mean = 5 + (-2 + 4) / 2
+
+    assert np.mean(signal.data) == pytest.approx(
+        expected_mean,
+        abs=0.03
+    )
+
+
+def test_white_noise_uniform_offset_does_not_change_variance():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=50000,
+        low=-2,
+        high=4,
+        offset=10,
+        seed=42
+    )
+
+    expected_variance = (4 - (-2)) ** 2 / 12
+
+    assert np.var(signal.data) == pytest.approx(
+        expected_variance,
+        abs=0.04
+    )
+
+
+def test_white_noise_uniform_zero_offset():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=10000,
+        low=-1,
+        high=1,
+        offset=0,
+        seed=42
+    )
+
+    assert np.all(signal.data >= -1)
+    assert np.all(signal.data < 1)
+
+
+# RANDOMNESS AND REPRODUCIBILITY
+
+def test_white_noise_uniform_same_seed_produces_same_output():
+    signal_1 = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    signal_2 = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    np.testing.assert_array_equal(
+        signal_1.data,
+        signal_2.data
+    )
+
+
+def test_white_noise_uniform_different_seeds_produce_different_output():
+    signal_1 = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=1000,
+        seed=42
+    )
+
+    signal_2 = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=1000,
+        seed=100
+    )
+
+    assert not np.array_equal(
+        signal_1.data,
+        signal_2.data
+    )
+
+
+def test_white_noise_uniform_zero_seed():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=100,
+        seed=0
+    )
+
+    assert len(signal.data) == 100
+
+
+def test_white_noise_uniform_none_seed():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=100,
+        seed=None
+    )
+
+    assert len(signal.data) == 100
+
+
+# WHITE NOISE PROPERTY
+
+def test_white_noise_uniform_samples_are_uncorrelated():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=50000,
+        seed=42
+    )
+
+    correlation = np.corrcoef(
+        signal.data[:-1],
+        signal.data[1:]
+    )[0, 1]
+
+    assert abs(correlation) < 0.03
+
+
+# OUTPUT AND METADATA
+
+def test_white_noise_uniform_returns_signal_object():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=100
+    )
+
+    assert isinstance(signal, Signal)
+
+
+def test_white_noise_uniform_output_length():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=500
+    )
+
+    assert signal.n_samples == 500
+    assert len(signal.data) == 500
+
+
+def test_white_noise_uniform_sampling_frequency():
+    signal = generator.white_noise_uniform(
+        fs=8000,
+        n_samples=100
+    )
+
+    assert signal.fs == 8000
+
+
+def test_white_noise_uniform_output_is_finite():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=1000,
+        low=-5,
+        high=5,
+        offset=2,
+        seed=42
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+def test_white_noise_uniform_output_dtype():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=100
+    )
+
+    assert np.issubdtype(signal.data.dtype, np.floating)
+
+
+# LOW VALIDATION
+
+@pytest.mark.parametrize(
+    "low",
+    [True, False, np.bool_(True), "2", None, 2 + 3j]
+)
+def test_white_noise_uniform_invalid_low_type(low):
+    with pytest.raises(TypeError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            low=low
+        )
+
+
+@pytest.mark.parametrize(
+    "low",
+    [np.nan, np.inf, -np.inf]
+)
+def test_white_noise_uniform_non_finite_low(low):
+    with pytest.raises(ValueError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            low=low
+        )
+
+
+# HIGH VALIDATION
+
+@pytest.mark.parametrize(
+    "high",
+    [True, False, np.bool_(True), "2", None, 2 + 3j]
+)
+def test_white_noise_uniform_invalid_high_type(high):
+    with pytest.raises(TypeError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            high=high
+        )
+
+
+@pytest.mark.parametrize(
+    "high",
+    [np.nan, np.inf, -np.inf]
+)
+def test_white_noise_uniform_non_finite_high(high):
+    with pytest.raises(ValueError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            high=high
+        )
+
+
+# BOUNDARY RELATIONSHIP VALIDATION
+
+@pytest.mark.parametrize(
+    "low, high",
+    [
+        (2, 2),
+        (5, 2),
+        (10, -10),
+        (0, 0)
+    ]
+)
+def test_white_noise_uniform_invalid_bounds(low, high):
+    with pytest.raises(ValueError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            low=low,
+            high=high
+        )
+
+
+# OFFSET VALIDATION
+
+@pytest.mark.parametrize(
+    "offset",
+    [True, False, np.bool_(True), "5", None, 2 + 3j]
+)
+def test_white_noise_uniform_invalid_offset_type(offset):
+    with pytest.raises(TypeError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            offset=offset
+        )
+
+
+@pytest.mark.parametrize(
+    "offset",
+    [np.nan, np.inf, -np.inf]
+)
+def test_white_noise_uniform_non_finite_offset(offset):
+    with pytest.raises(ValueError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            offset=offset
+        )
+
+
+# SEED VALIDATION
+
+@pytest.mark.parametrize(
+    "seed",
+    [True, False, np.bool_(True), 2.5, "42", 2 + 3j]
+)
+def test_white_noise_uniform_invalid_seed_type(seed):
+    with pytest.raises(TypeError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            seed=seed
+        )
+
+
+@pytest.mark.parametrize(
+    "seed",
+    [-1, -10, -100]
+)
+def test_white_noise_uniform_negative_seed(seed):
+    with pytest.raises(ValueError):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=100,
+            seed=seed
+        )
+
+
+def test_white_noise_uniform_numpy_integer_seed():
+    signal = generator.white_noise_uniform(
+        fs=1000,
+        n_samples=100,
+        seed=np.int64(42)
+    )
+
+    assert len(signal.data) == 100
+
+
+# FS VALIDATION
+
+@pytest.mark.parametrize(
+    "fs",
+    [0, -1, np.nan, np.inf]
+)
+def test_white_noise_uniform_invalid_fs(fs):
+    with pytest.raises((TypeError, ValueError)):
+        generator.white_noise_uniform(
+            fs=fs,
+            n_samples=100
+        )
+
+
+# N_SAMPLES VALIDATION
+
+@pytest.mark.parametrize(
+    "n_samples",
+    [0, -1, True, "100"]
+)
+def test_white_noise_uniform_invalid_n_samples(n_samples):
+    with pytest.raises((TypeError, ValueError)):
+        generator.white_noise_uniform(
+            fs=1000,
+            n_samples=n_samples
+        )
+
+
+def test_white_noise_uniform_fractional_n_samples():
+    with pytest.warns(UserWarning, match="rounded"):
+        signal = generator.white_noise_uniform(
+            fs=1000,
+            n_samples=2.5,
+            seed=42
+        )
+
+    assert len(signal.data) == 2  # Adjust if your rounding policy differs.

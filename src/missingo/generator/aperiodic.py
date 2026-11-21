@@ -1,5 +1,5 @@
 from ..signal import Signal
-from .._validation import validate_inputs_aperiodic, validate_delay
+from .._validation import validate_inputs_aperiodic, validate_delay, validate_seed, validate_low, validate_high, validate_uniform_bounds
 import numpy as np
 
 #impulse signal function
@@ -95,3 +95,23 @@ def white_noise_gaussian(fs, n_samples, mean = 0, std = 1, seed = None, offset =
 
     return signal
 
+#Uniform White Noise generator
+
+
+def white_noise_uniform(fs, n_samples,low=-1.0, high=1.0, seed=None, offset=0.0):
+
+    # validation for all inputs
+    n_samples = validate_inputs_aperiodic(fs, n_samples, offset=offset)
+    validate_low(low)
+    validate_high(high)
+    validate_uniform_bounds(low, high)
+    validate_seed(seed)
+
+    # mathematical representation
+    rng = np.random.default_rng(seed)
+    noise = offset + rng.uniform(low, high, n_samples)
+
+    # create a Signal object with generated White Noise Uniform data and the sampling frequency
+    signal = Signal(noise, fs)
+
+    return signal
