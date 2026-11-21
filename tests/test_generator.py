@@ -1640,3 +1640,247 @@ def test_step_remains_constant_after_delay():
 
     assert np.all(result.data[:4] == 2)
     assert np.all(result.data[4:] == 7)
+
+
+# -----------------------------------
+# RAMP MATHEMATICAL BEHAVIOUR
+# -----------------------------------
+
+def test_ramp_default():
+    signal = generator.ramp(fs=4, n_samples=5)
+
+    expected = np.array([0, 0.25, 0.5, 0.75, 1.0])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_positive_slope():
+    signal = generator.ramp(fs=4, n_samples=5, slope=2)
+
+    expected = np.array([0, 0.5, 1, 1.5, 2])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_negative_slope():
+    signal = generator.ramp(fs=2, n_samples=6, slope=-4)
+
+    expected = np.array([0, -2, -4, -6, -8, -10])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_zero_slope():
+    signal = generator.ramp(fs=4, n_samples=5, slope=0)
+
+    expected = np.zeros(5)
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+# -----------------------------------
+# DELAY AND OFFSET
+# -----------------------------------
+
+def test_ramp_with_delay():
+    signal = generator.ramp(fs=4, n_samples=7, delay=2, slope=2)
+
+    expected = np.array([0, 0, 0, 0.5, 1, 1.5, 2])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_with_offset():
+    signal = generator.ramp(fs=4, n_samples=5, offset=3)
+
+    expected = np.array([3, 3.25, 3.5, 3.75, 4])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_with_delay_and_offset():
+    signal = generator.ramp(
+        fs=4,
+        n_samples=7,
+        delay=2,
+        slope=2,
+        offset=3
+    )
+
+    expected = np.array([3, 3, 3, 3.5, 4, 4.5, 5])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_negative_slope_with_offset_and_delay():
+    signal = generator.ramp(
+        fs=2,
+        n_samples=6,
+        delay=2,
+        slope=-4,
+        offset=5
+    )
+
+    expected = np.array([5, 5, 5, 3, 1, -1])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_with_zero_delay():
+    signal = generator.ramp(fs=4, n_samples=4, delay=0, slope=2)
+
+    expected = np.array([0, 0.5, 1, 1.5])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+def test_ramp_accepts_integer_float_delay():
+    signal = generator.ramp(fs=4, n_samples=5, delay=2.0)
+
+    expected = np.array([0, 0, 0, 0.25, 0.5])
+
+    np.testing.assert_allclose(signal.data, expected)
+
+
+# -----------------------------------
+# OUTPUT AND SIGNAL METADATA
+# -----------------------------------
+
+def test_ramp_returns_signal_object():
+    signal = generator.ramp(fs=100, n_samples=100)
+
+    assert isinstance(signal, Signal)
+
+
+def test_ramp_output_length():
+    signal = generator.ramp(fs=100, n_samples=200, delay=50)
+
+    assert signal.n_samples == 200
+    assert len(signal.data) == 200
+
+
+def test_ramp_sampling_frequency():
+    signal = generator.ramp(fs=8000, n_samples=100)
+
+    assert signal.fs == 8000
+
+
+def test_ramp_output_is_finite():
+    signal = generator.ramp(
+        fs=1000,
+        n_samples=100,
+        slope=-5,
+        offset=10
+    )
+
+    assert np.all(np.isfinite(signal.data))
+
+
+# -----------------------------------
+# SLOPE VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("slope", [
+    True,
+    False,
+    np.bool_(True),
+    "2",
+    None,
+    2 + 3j
+])
+def test_ramp_invalid_slope_type(slope):
+    with pytest.raises(TypeError):
+        generator.ramp(fs=100, n_samples=10, slope=slope)
+
+
+@pytest.mark.parametrize("slope", [
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_ramp_non_finite_slope(slope):
+    with pytest.raises(ValueError):
+        generator.ramp(fs=100, n_samples=10, slope=slope)
+
+
+# -----------------------------------
+# OFFSET VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("offset", [
+    True,
+    "5",
+    None,
+    2 + 3j
+])
+def test_ramp_invalid_offset_type(offset):
+    with pytest.raises(TypeError):
+        generator.ramp(fs=100, n_samples=10, offset=offset)
+
+
+@pytest.mark.parametrize("offset", [
+    np.nan,
+    np.inf,
+    -np.inf
+])
+def test_ramp_non_finite_offset(offset):
+    with pytest.raises(ValueError):
+        generator.ramp(fs=100, n_samples=10, offset=offset)
+
+
+# -----------------------------------
+# DELAY VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("delay", [
+    True,
+    False,
+    np.bool_(True),
+    2.5,
+    "2"
+])
+def test_ramp_invalid_delay(delay):
+    with pytest.raises((TypeError, ValueError)):
+        generator.ramp(fs=100, n_samples=10, delay=delay)
+
+
+@pytest.mark.parametrize("delay", [-1, 10])
+def test_ramp_delay_out_of_range(delay):
+    with pytest.raises(ValueError):
+        generator.ramp(fs=100, n_samples=10, delay=delay)
+
+
+# -----------------------------------
+# SAMPLING FREQUENCY VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("fs", [
+    0,
+    -1,
+    np.nan,
+    np.inf
+])
+def test_ramp_invalid_fs(fs):
+    with pytest.raises((TypeError, ValueError)):
+        generator.ramp(fs=fs, n_samples=10)
+
+
+# -----------------------------------
+# SAMPLE COUNT VALIDATION
+# -----------------------------------
+
+@pytest.mark.parametrize("n_samples", [
+    0,
+    -1,
+    True,
+    "10"
+])
+def test_ramp_invalid_n_samples(n_samples):
+    with pytest.raises((TypeError, ValueError)):
+        generator.ramp(fs=100, n_samples=n_samples)
+
+def test_ramp_fractional_n_samples():
+    with pytest.warns(UserWarning, match="rounded"):
+        signal = generator.ramp(fs=100, n_samples=2.5)
+
+    assert len(signal.data) == 2  # Adjust if your rounding policy produces 3.

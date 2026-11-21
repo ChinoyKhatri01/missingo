@@ -1,6 +1,8 @@
 import numpy as np
 import warnings
 
+_NotProvided = object()
+
 def validate_frequency(frequency):
     if isinstance(frequency, (bool, np.bool_)):
         raise TypeError("frequency must be a number")
@@ -109,13 +111,26 @@ def validate_duty(duty):
     
     if duty <=0 or duty >= 1:
         raise ValueError("duty must be between 0 and 1")
+def validate_slope(slope):
+    if isinstance(slope, (bool, np.bool_)):
+        raise TypeError("slope must be a number")
+        
+    if not isinstance(slope, (int, float, np.integer, np.floating)):
+        raise TypeError("slope must be a number")
+        
+    if not np.isfinite(slope):
+        raise ValueError("slope must be finite")
     
 
-def validate_inputs_aperiodic(fs, n_samples, amplitude, offset):
+def validate_inputs_aperiodic(fs, n_samples, amplitude=_NotProvided, offset= 0, slope=_NotProvided):
     validate_fs(fs)
     n_samples = validate_n_samples(n_samples)
-    validate_amplitude(amplitude)
-    validate_offset(offset)
+    if amplitude is not _NotProvided:
+        validate_amplitude(amplitude)
+    if offset is not _NotProvided:
+        validate_offset(offset)
+    if slope is not _NotProvided:
+        validate_slope(slope)
 
     return n_samples
 

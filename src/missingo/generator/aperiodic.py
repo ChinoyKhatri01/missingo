@@ -27,6 +27,27 @@ def step(fs, n_samples, delay=0, amplitude=1.0, offset=0.0):
     #mathematical expression for step signal
     x = np.full(n_samples, offset, dtype=float  )
     x[delay:] += amplitude
+
     # create a Signal object with the generated step signal data and the specified sampling frequency
     signal = Signal(x, fs)
     return signal
+
+#ramp signal function
+def ramp(fs, n_samples, delay=0, slope=1.0, offset=0.0):
+
+    #validation for all inputs
+    n_samples = validate_inputs_aperiodic(fs, n_samples, slope=slope , offset=offset)
+    delay = validate_delay(delay, n_samples)
+
+    n = np.arange(n_samples, dtype = float)
+    # unit signal mask
+    u = (n >= delay).astype(float)
+    #mathematical expression for ramp signal
+    x = offset + slope*((n-delay)/fs)*u
+
+    # create a Signal object with the generated ramp signal data and the specified sampling frequency
+    signal = Signal(x, fs)
+
+    return signal
+
+#
