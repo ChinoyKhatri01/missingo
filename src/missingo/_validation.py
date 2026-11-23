@@ -253,5 +253,13 @@ def validate_delay(delay, n_samples):
     return int(delay)
 
 
-
+def validate_factor(factor):
+    if isinstance(factor, (bool, np.bool_)):
+        raise TypeError("factor must be a number")
+        
+    if not isinstance(factor, (int, float, np.integer, np.floating, complex, np.complexfloating)):
+        raise TypeError("factor must be a number")
+        
+    if not np.isfinite(factor):
+        raise ValueError("factor must be finite")
     
