@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from missingo import Signal
-from missingo.operations.amplitude import amplitude_scaling
+from missingo.time_domain_operations.amplitude import amplitude_scaling
 
 
 # ============================================================

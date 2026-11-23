@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from missingo import Signal
-from missingo.operations.padding import pad
+from missingo.time_domain_operations.padding import pad
 
 
 # Basic padding behaviour

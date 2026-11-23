@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from missingo import Signal
-from missingo.operations.concatenation import concatenate
+from missingo.time_domain_operations.concatenation import concatenate
 
 
 # =====================================================

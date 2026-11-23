@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from missingo import Signal
-from missingo.operations.segmentation import (
+from missingo.time_domain_operations.segmentation import (
     segmentation_by_count,
     segmentation_by_length,
 )

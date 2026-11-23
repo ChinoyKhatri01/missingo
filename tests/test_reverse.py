@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from missingo.operations.reverse import Signal, reverse
+from missingo.time_domain_operations.reverse import Signal, reverse
 
 
 def test_reverse_basic():

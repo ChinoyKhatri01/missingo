@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from missingo import Signal
-from missingo.operations.offset_adjustment import offset_adjustment
+from missingo.time_domain_operations.offset_adjustment import offset_adjustment
 
 
 # ============================================================
