@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 
 class Signal:
     def __init__(self, data, fs):
@@ -22,14 +22,15 @@ class Signal:
         if not np.all(np.isfinite(arr)):
             raise ValueError("data contains non-finite values (NaN or Inf)")
 
+        
         if isinstance(fs, (bool, np.bool_)):
             raise ValueError("fs must be a number")
         if not isinstance(fs, (int, float, np.integer, np.floating)):
             raise ValueError("fs must be a number")
+        if not np.isfinite(fs):
+            raise ValueError("fs must be finite")  
         if fs<=0:
             raise ValueError("fs must be greater than 0")
-        if not np.isfinite(fs):
-            raise ValueError("fs must be finite")
         
         self._data = arr.copy()
         self._fs = float(fs) 
@@ -73,3 +74,129 @@ class Signal:
           ndim = {self._data.ndim})"""
         return sig
 
+    def validate_arithmetic_input(self , other):
+        if isinstance(other, ( bool, np.bool_)):
+            raise TypeError("only a Signal or a scalar can be used in arithmetic with a Signal object")
+        if not isinstance(other,(int, float, np.integer, np.floating, complex, np.complexfloating, Signal)):
+            raise TypeError("only a Signal or a scaler can be added to a Signal object")
+            
+        if isinstance(other, Signal):
+            if self.fs != other.fs :
+                raise ValueError("both signal objects must have same fs")
+            if self.n_samples != other.n_samples:
+                raise ValueError("both signal objects must have equal number of data elements")
+            
+        else :
+                
+            if not np.isfinite(other):
+                raise ValueError("input must be finite")
+
+
+
+
+    def __add__(self,other):
+        #validate inputs
+        self.validate_arithmetic_input(other)
+
+        fs = self.fs
+        #calculating data for resulting signal
+        if isinstance(other,Signal):
+            x = self.data + other.data 
+        else:
+            x = self.data + other
+
+        #generating signal based on calculations
+        signal = Signal(x,fs)
+
+        return signal
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    
+    def __sub__(self,other):
+        #validate inputs
+        self.validate_arithmetic_input(other)
+
+        fs = self.fs
+        #calculating data for resulting signal
+        if isinstance(other,Signal):
+            x = self.data - other.data 
+        else:
+            x = self.data - other
+
+        #generating signal based on calculations
+        signal = Signal(x,fs)
+
+        return signal
+
+    def __rsub__(self, other):
+        self.validate_arithmetic_input(other)
+
+        x = other - self.data
+
+        signal = Signal(x, self.fs)
+
+        return signal
+
+    
+    def __mul__(self,other):
+        #validate inputs
+        self.validate_arithmetic_input(other)
+
+        fs = self.fs
+        #calculating data for resulting signal
+        if isinstance(other,Signal):
+            x = self.data * other.data 
+        else:
+            x = self.data * other
+
+        #generating signal based on calculations
+        signal = Signal(x,fs)
+
+        return signal
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    
+    def __truediv__(self,other):
+        #validate inputs
+        self.validate_arithmetic_input(other)
+        if isinstance(other, Signal):
+            if np.any(other.data == 0):
+                raise ZeroDivisionError("Signal in denominator must contain non zero samples")
+        else:
+            if other == 0:
+               raise ZeroDivisionError("scalar in denominator can't be zero")
+        fs = self.fs
+        #calculating data for resulting signal
+        if isinstance(other,Signal):
+            x = self.data / other.data 
+        else:
+            x = self.data / other
+
+        #generating signal based on calculations
+        signal = Signal(x,fs)
+
+        return signal
+
+    def __rtruediv__(self, other):
+
+        # Validate inputs
+        self.validate_arithmetic_input(other)
+        fs = self.fs
+
+        # Check denominator for zero
+        if np.any(self.data == 0):
+            raise ZeroDivisionError("Signal in denominator must contain non-zero samples")
+
+        # Calculate resulting data
+        x = other / self.data
+
+        # Generate resulting Signal
+        signal = Signal(x, fs)
+
+        return signal
+
+    

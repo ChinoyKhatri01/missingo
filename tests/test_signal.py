@@ -274,3 +274,126 @@ def test_fs_is_stored_as_float():
     assert isinstance(signal.fs, float)
     assert signal.fs == 1000.0
 
+# ---------------------------------
+# Signal + Signal
+# ---------------------------------
+
+def test_add_two_signals():
+    x = Signal([1, 2, 3], fs=1000)
+    y = Signal([4, 5, 6], fs=1000)
+
+    result = x + y
+
+    np.testing.assert_array_equal(result.data, [5, 7, 9])
+    assert result.fs == 1000
+    assert isinstance(result, Signal)
+
+
+def test_add_signals_with_different_fs():
+    x = Signal([1, 2, 3], fs=1000)
+    y = Signal([4, 5, 6], fs=2000)
+
+    with pytest.raises(ValueError):
+        x + y
+
+
+def test_add_signals_with_different_lengths():
+    x = Signal([1, 2, 3], fs=1000)
+    y = Signal([4, 5], fs=1000)
+
+    with pytest.raises(ValueError):
+        x + y
+
+
+# ---------------------------------
+# Signal + Scalar
+# ---------------------------------
+
+def test_add_integer_scalar():
+    x = Signal([1, 2, 3], fs=1000)
+
+    result = x + 5
+
+    np.testing.assert_array_equal(result.data, [6, 7, 8])
+    assert result.fs == 1000
+
+
+def test_add_float_scalar():
+    x = Signal([1, 2, 3], fs=1000)
+
+    result = x + 2.5
+
+    np.testing.assert_array_equal(result.data, [3.5, 4.5, 5.5])
+
+
+def test_add_complex_scalar():
+    x = Signal([1, 2, 3], fs=1000)
+
+    result = x + (2 + 3j)
+
+    np.testing.assert_array_equal(
+        result.data,
+        [3 + 3j, 4 + 3j, 5 + 3j]
+    )
+
+
+def test_add_numpy_scalar():
+    x = Signal([1, 2, 3], fs=1000)
+
+    result = x + np.float64(2.5)
+
+    np.testing.assert_array_equal(result.data, [3.5, 4.5, 5.5])
+
+
+# ---------------------------------
+# Invalid operands
+# ---------------------------------
+
+@pytest.mark.parametrize("invalid_operand", [
+    [1, 2, 3],
+    (1, 2, 3),
+    np.array([1, 2, 3]),
+    "hello",
+    True,
+    np.bool_(True),
+    None
+])
+def test_add_invalid_operand(invalid_operand):
+    x = Signal([1, 2, 3], fs=1000)
+
+    with pytest.raises(TypeError):
+        x + invalid_operand
+
+
+@pytest.mark.parametrize("invalid_scalar", [
+    np.inf,
+    -np.inf,
+    np.nan,
+    complex(np.inf, 1),
+    complex(1, np.nan)
+])
+def test_add_non_finite_scalar(invalid_scalar):
+    x = Signal([1, 2, 3], fs=1000)
+
+    with pytest.raises(ValueError):
+        x + invalid_scalar
+
+
+# ---------------------------------
+# Immutability
+# ---------------------------------
+
+def test_add_does_not_modify_original_signals():
+    x = Signal([1, 2, 3], fs=1000)
+    y = Signal([4, 5, 6], fs=1000)
+
+    original_x = x.data
+    original_y = y.data
+
+    result = x + y
+
+    np.testing.assert_array_equal(x.data, original_x)
+    np.testing.assert_array_equal(y.data, original_y)
+
+    assert result is not x
+    assert result is not y
