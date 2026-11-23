@@ -1,0 +1,1 @@
+from .amplitude import amplitude_scaling
