@@ -262,4 +262,14 @@ def validate_factor(factor):
         
     if not np.isfinite(factor):
         raise ValueError("factor must be finite")
+
+def validate_shift(shift):
+    if isinstance(shift, (bool, np.bool_)):
+        raise TypeError("shift must be an integer")
+
+    if not isinstance(shift, (int, np.integer)):
+        raise TypeError("shift must be an integer")
+
+    if not np.isfinite(shift):
+        raise ValueError("shift must be finite")
     
