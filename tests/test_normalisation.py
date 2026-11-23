@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from missingo import Signal
-from missingo.time_domain_operations.normalisation import normalisation
+from missingo.td_operations.normalisation import normalisation
 
 
 # --------------------------------------------------

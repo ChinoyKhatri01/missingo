@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from missingo import Signal
-from missingo.time_domain_operations.shifting import shift_fixed, shift_circular, shift_extended
+from missingo.td_operations.shifting import shift_fixed, shift_circular, shift_extended
 
 
 

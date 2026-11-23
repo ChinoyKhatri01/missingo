@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from missingo import Signal
-from missingo.time_domain_operations.cropping import crop_by_indices, crop_by_time
+from missingo.td_operations.cropping import crop_by_indices, crop_by_time
 
 
 # =====================================================
