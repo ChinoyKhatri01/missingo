@@ -53,5 +53,23 @@ def peak_to_peak(signal):
 
     return m
 
+def mean_absolute_value(signal):
+    #validating imput
+    if not isinstance(signal, Signal):
+        raise TypeError("signal must be a Signal object")
+
+    m = np.mean(np.abs(signal.data)).item()
+
+    return m
+
+def rms(signal):
+    #validating inputs
+    if not isinstance(signal, Signal):
+        raise TypeError("signal must be a Signal object")
+
+    m = (np.mean(np.abs(signal.data)**2)).item()
+
+    return m**(1/2)
+
 
     
