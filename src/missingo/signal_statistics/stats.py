@@ -71,5 +71,35 @@ def rms(signal):
 
     return m**(1/2)
 
+def variance(signal):
+    #validating inputs
+    if not isinstance(signal, Signal):
+        raise TypeError("signal must be a Signal object")
+
+    m = np.sum((np.abs(signal.data - mean(signal)))**2)/len(signal.data)
+
+    return m.item()
+
+def standard_deviation(signal):
+
+    m = variance(signal)**0.5
+
+    return m
+
+def energy(signal):
+
+    if not isinstance(signal, Signal):
+        raise TypeError("signal must be a Signal object")
+
+    m = np.sum((np.abs(signal.data))**2).item()
+
+    return m
+
+
+def average_power(signal):
+
+    m = energy(signal)/len(signal.data)
+
+    return m
 
     
