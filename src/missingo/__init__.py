@@ -3,6 +3,10 @@ from . import td_operations
 from .td_operations import *
 from . import generator
 from .generator import *
+from . import signal_statistics
+from .signal_statistics import *
+from . import visualisation
+from .visualisation import *
 
 __all__ = [
     "Signal",
@@ -31,5 +35,18 @@ __all__ = [
     "amplitude_scaling",
     "offset_adjustment",
     "normalisation",
+    "standard_deviation", 
+    "variance", 
+    "minimum", 
+    "maximum", 
+    "median", 
+    "mean", 
+    "mean_absolute_value", 
+    "energy", 
+    "peak_to_peak", 
+    "average_power", 
+    "rms",
+    "plot",
+    "show"
     ]
     
